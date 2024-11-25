@@ -1,8 +1,34 @@
 <main class="main">
   <div class="content">
-   rxjs test
+    rxjs test
+  </div>
+
+  <div class="form-container">
+    <form [formGroup]="form">
+      <div class="form-field">
+        <label>Description</label>
+        <input type="text" formControlName="description">
+      </div>
+
+      <div class="form-field">
+        <label>Category</label>
+        <input type="text" formControlName="category">
+      </div>
+
+      <div class="form-field">
+        <label>Long description</label>
+        <input type="text" formControlName="longDescription">
+      </div>
+
+      <div class="form-field">
+        <label>Released at</label>
+        <input [disabled]="true" type="text" formControlName="releasedAt">
+      </div>
+
+      <button (click)="showFormValues()">Save</button>
+    </form>
   </div>
 </main>
 
 
-<router-outlet />
+<router-outlet/>

@@ -1,0 +1,18 @@
+{
+  "data": {
+    "users": [
+      {
+        "id": 1,
+        "name": "Naruto",
+        "email": "naruto@ninja.com",
+        "age": 15
+      },
+      {
+        "id": 2,
+        "name": "Sasuke",
+        "email": "sasuke@ninja.com",
+        "age": 16
+      }
+    ]
+  }
+}
