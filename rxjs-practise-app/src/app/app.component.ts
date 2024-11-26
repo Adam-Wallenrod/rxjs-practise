@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterOutlet } from '@angular/router';
 import moment from 'moment';
-import { map, Observable, tap } from 'rxjs';
+import { concat, map, Observable, of, tap } from 'rxjs';
 
 
 export interface User {
@@ -77,9 +77,18 @@ export class AppComponent implements OnInit {
   ngOnInit() {
     //this.getData();
     this.getMockData();
+    this.concateObservables();
   }
 
+  concateObservables(): void {
+    const series1$ = of(1, 2);
+    const series2$ = of('c', 'd');
 
+    const result$ = concat(series1$, series2$);
+    //result$.subscribe(result => console.log('result --> ', result));
+    //shorthand
+    result$.subscribe(console.log);
+  }
 
   getData(): void {
     this.http$
