@@ -1,9 +1,22 @@
-import { HttpClient } from '@angular/common/http';
-import { Component, OnInit } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterOutlet } from '@angular/router';
 import moment from 'moment';
-import { concat, map, Observable, of, tap } from 'rxjs';
+import {
+  concat,
+  concatMap,
+  debounceTime, exhaustMap,
+  fromEvent,
+  interval,
+  map,
+  merge,
+  mergeMap,
+  Observable,
+  of,
+  startWith, switchMap,
+  tap,
+} from 'rxjs';
 
 
 export interface User {
@@ -46,38 +59,57 @@ export interface User {
   };
 }
 
+export interface AnimeUser {
+  id: string;
+  name: string;
+  email: string;
+  age: string;
+}
+
 @Component({
   selector: 'app-root',
   imports: [RouterOutlet, FormsModule, ReactiveFormsModule],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.css'
+  styleUrl: './app.component.css',
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, AfterViewInit {
   form: FormGroup;
 
   http$: Observable<User[]>;
 
-  httpMock$: Observable<any>;
+  httpMockGet$: Observable<any>;
 
   title = 'rxjs-practise-app';
 
   url = 'http://localhost:3000';
 
-  constructor( private fb: FormBuilder, private http: HttpClient) {
+  @ViewChild('saveButton') saveButton!: ElementRef;
+
+  @ViewChild('searchInput') searchInput!: ElementRef;
+
+  constructor(private fb: FormBuilder, private http: HttpClient) {
     this.http$ = this.http.get<User[]>('https://random-data-api.com/api/v2/users?size=3');
-    this.httpMock$ = this.http.get(this.url + '/data')
+    this.httpMockGet$ = this.http.get(this.url + '/data');
     this.form = this.fb.group({
-      description: ['', Validators.required],
-      category: ['', Validators.required],
-      releasedAt: [moment().format('MMMM Do YYYY, h:mm:ss a')],
-      longDescription: ['', Validators.required]
-    })
+      id: ['', Validators.required],
+      name: ['', Validators.required],
+      email: ['', Validators.required],
+      age: ['', Validators.required],
+    });
   }
 
-  ngOnInit() {
+  ngOnInit(): void {
     //this.getData();
+    //this.concateObservables();
+    //this.mergeObservables();
     this.getMockData();
-    this.concateObservables();
+    this.listenFormChanges();
+
+  }
+
+  ngAfterViewInit(): void {
+    this.listenForSearch();
+    this.listenForSave();
   }
 
   concateObservables(): void {
@@ -85,16 +117,23 @@ export class AppComponent implements OnInit {
     const series2$ = of('c', 'd');
 
     const result$ = concat(series1$, series2$);
-    //result$.subscribe(result => console.log('result --> ', result));
     //shorthand
     result$.subscribe(console.log);
+  }
+
+  mergeObservables(): void {
+    const series1$ = interval(1000).pipe(map(val => val * 10));
+    const series2$ = interval(1000).pipe(map(val => val * 1000));
+
+    const result$ = merge(series1$, series2$);
+    result$.subscribe((res) => console.log('$$$ mergeObservable result --> ', res));
   }
 
   getData(): void {
     this.http$
       .pipe(
-        tap(()=> console.log('HTTP request executed.')),
-        map(users=> users.map(user => user.address)),
+        tap(() => console.log('HTTP request executed.')),
+        map(users => users.map(user => user.address)),
       )
       .subscribe(data => {
         console.log('%c fetched data ---> ', 'color: yellow', data);
@@ -102,16 +141,53 @@ export class AppComponent implements OnInit {
   }
 
   getMockData(): void {
-    this.httpMock$
+    this.httpMockGet$
       .pipe(
-        tap(()=> console.log('Mocked HTTP request executed.')),
+        tap(() => console.log('Mocked HTTP request executed.')),
       )
       .subscribe(users => {
         console.log('%c fetched mocked users ---> ', 'color: yellow', users);
       });
   }
 
-  showFormValues(): void {
-    console.log('Form VALUES: ', this.form.getRawValue());
+  listenFormChanges(): void {
+    this.form.valueChanges
+      .pipe(
+        //concatMap(formValue => this.http.put(this.url + '/data', formValue)  )// inner observable
+        mergeMap(formValue => this.http.put(this.url + '/data', formValue)),
+      ).subscribe(
+      saveResult => {
+        console.log('Save Result --> ', saveResult);
+      },
+    );
+  }
+
+  listenForSearch(): void {
+    const searchText$: Observable<any> = fromEvent<any>(this.searchInput.nativeElement, 'keyup');
+    searchText$.pipe(
+      map(event => event.target.value),
+      startWith(''),
+      debounceTime(200),
+    );
+    searchText$.pipe(
+      tap(text => console.log('tap before switchMap() ', text)),
+      switchMap(text => this.getSearchedUsers(text)),
+    ).subscribe(result => {
+      console.log('search results ==> ', result);
+    });
+  }
+
+  listenForSave(): void {
+    fromEvent(this.saveButton.nativeElement, 'click')
+      .pipe(
+        //concatMap(()=>  this.http.put(this.url + '/data', this.form.getRawValue())
+        exhaustMap(() => this.http.put(this.url + '/data', this.form.getRawValue()),
+        ),
+      ).subscribe();
+  }
+
+  getSearchedUsers(searchPhrase: string): Observable<User[]> {
+    const params = new HttpParams().set('search', searchPhrase);
+    return this.http.get<User[]>(this.url + '/data', { params });
   }
 }

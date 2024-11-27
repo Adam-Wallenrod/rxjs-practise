@@ -6,27 +6,34 @@
   <div class="form-container">
     <form [formGroup]="form">
       <div class="form-field">
-        <label>Description</label>
-        <input type="text" formControlName="description">
+        <label>Id</label>
+        <input type="text" formControlName="id">
       </div>
 
       <div class="form-field">
-        <label>Category</label>
-        <input type="text" formControlName="category">
+        <label>Name</label>
+        <input type="text" formControlName="name">
       </div>
 
       <div class="form-field">
-        <label>Long description</label>
-        <input type="text" formControlName="longDescription">
+        <label>Email</label>
+        <input type="text" formControlName="email">
       </div>
 
       <div class="form-field">
-        <label>Released at</label>
-        <input [disabled]="true" type="text" formControlName="releasedAt">
+        <label>Age</label>
+        <input [disabled]="true" type="text" formControlName="age">
       </div>
 
-      <button (click)="showFormValues()">Save</button>
+      <div class="buttons">
+        <button #saveButton class="save-button">Save</button>
+      </div>
     </form>
+  </div>
+
+  <div class="search-container">
+    <label>Search</label>
+    <input #searchInput type="text">
   </div>
 </main>
 
