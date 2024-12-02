@@ -1,12 +1,18 @@
+import { CommonModule } from '@angular/common';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldControl, MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { BrowserAnimationsModule, NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterOutlet } from '@angular/router';
 import moment from 'moment';
 import {
+  catchError,
   concat,
   concatMap,
-  debounceTime, exhaustMap,
+  debounceTime, EMPTY, exhaustMap,
   fromEvent,
   interval,
   map,
@@ -68,7 +74,15 @@ export interface AnimeUser {
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, FormsModule, ReactiveFormsModule],
+  imports: [
+    RouterOutlet,
+    FormsModule,
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    CommonModule,
+    MatButtonModule,
+  ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
@@ -86,6 +100,10 @@ export class AppComponent implements OnInit, AfterViewInit {
   @ViewChild('saveButton') saveButton!: ElementRef;
 
   @ViewChild('searchInput') searchInput!: ElementRef;
+
+  @ViewChild('fetchInput') fetchInput!: ElementRef;
+
+  @ViewChild('fetchButton', { read: ElementRef }) fetchButton!: ElementRef<HTMLButtonElement>;
 
   constructor(private fb: FormBuilder, private http: HttpClient) {
     this.http$ = this.http.get<User[]>('https://random-data-api.com/api/v2/users?size=3');
@@ -110,6 +128,7 @@ export class AppComponent implements OnInit, AfterViewInit {
   ngAfterViewInit(): void {
     this.listenForSearch();
     this.listenForSave();
+    this.listenFetchButtonClick();
   }
 
   concateObservables(): void {
@@ -158,6 +177,22 @@ export class AppComponent implements OnInit, AfterViewInit {
       ).subscribe(
       saveResult => {
         console.log('Save Result --> ', saveResult);
+      },
+    );
+  }
+
+  listenFetchButtonClick(): void {
+    fromEvent(this.fetchButton.nativeElement, 'click').pipe(
+      map(() => this.fetchInput.nativeElement.value),
+      concatMap(value =>
+        this.http.get(`https://random-data-api.com/api/${value}/random_${value}`).pipe(
+          catchError( error => of(`Could not fetch data due to: ${error}`))
+        ),
+      ),
+    ).subscribe({
+        next: value => console.log('value --> ', value),
+        error: error => console.log('error --> ', error),
+        complete: () => console.log('Completed'),
       },
     );
   }

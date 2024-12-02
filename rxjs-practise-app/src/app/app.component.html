@@ -35,6 +35,33 @@
     <label>Search</label>
     <input #searchInput type="text">
   </div>
+
+
+  <div class="fetch-container" style="margin-top: 25px">
+    <mat-form-field class="fetch">
+      <mat-label>Fetch data</mat-label>
+      <input #fetchInput matInput/>
+    </mat-form-field>
+    <button
+      #fetchButton
+      mat-flat-button
+      [disabled]="!fetchInput.value"
+    >
+      Fetch!
+    </button>
+  </div>
+
+  <!--  <form class="example-form">-->
+  <!--    <mat-form-field class="example-full-width">-->
+  <!--      <mat-label>Favorite food</mat-label>-->
+  <!--      <input matInput placeholder="Ex. Pizza" value="Sushi">-->
+  <!--    </mat-form-field>-->
+
+  <!--    <mat-form-field class="example-full-width">-->
+  <!--      <mat-label>Leave a comment</mat-label>-->
+  <!--      <textarea matInput placeholder="Ex. It makes me feel..."></textarea>-->
+  <!--    </mat-form-field>-->
+  <!--  </form>-->
 </main>
 
 
