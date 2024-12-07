@@ -89,7 +89,7 @@ export interface AnimeUser {
   styleUrl: './app.component.css',
 })
 export class AppComponent implements OnInit, AfterViewInit {
-  createdCharacter!: Character;
+  createdCharacter: Character | undefined = undefined;
 
   characterForm!: FormGroup;
 
