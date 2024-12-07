@@ -3,11 +3,9 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldControl, MatFormFieldModule } from '@angular/material/form-field';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { BrowserAnimationsModule, NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterOutlet } from '@angular/router';
-import moment from 'moment';
 import {
   catchError,
   concat,
@@ -23,6 +21,10 @@ import {
   startWith, switchMap,
   tap,
 } from 'rxjs';
+import { Character } from '../patterns/factory/character';
+import { CharacterData } from '../patterns/factory/character-data.type';
+import { createCharacter } from '../patterns/factory/character-factory';
+import { GameCharacter } from '../patterns/factory/game-characters.enum';
 
 
 export interface User {
@@ -87,7 +89,13 @@ export interface AnimeUser {
   styleUrl: './app.component.css',
 })
 export class AppComponent implements OnInit, AfterViewInit {
-  form: FormGroup;
+  createdCharacter!: Character;
+
+  characterForm!: FormGroup;
+
+  form!: FormGroup;
+
+  gameCharacter: typeof GameCharacter = GameCharacter;
 
   http$: Observable<User[]>;
 
@@ -108,12 +116,8 @@ export class AppComponent implements OnInit, AfterViewInit {
   constructor(private fb: FormBuilder, private http: HttpClient) {
     this.http$ = this.http.get<User[]>('https://random-data-api.com/api/v2/users?size=3');
     this.httpMockGet$ = this.http.get(this.url + '/data');
-    this.form = this.fb.group({
-      id: ['', Validators.required],
-      name: ['', Validators.required],
-      email: ['', Validators.required],
-      age: ['', Validators.required],
-    });
+    this.initForm();
+    this.initCharacterForm();
   }
 
   ngOnInit(): void {
@@ -122,7 +126,6 @@ export class AppComponent implements OnInit, AfterViewInit {
     //this.mergeObservables();
     this.getMockData();
     this.listenFormChanges();
-
   }
 
   ngAfterViewInit(): void {
@@ -138,6 +141,32 @@ export class AppComponent implements OnInit, AfterViewInit {
     const result$ = concat(series1$, series2$);
     //shorthand
     result$.subscribe(console.log);
+  }
+
+  createGameCharacter() {
+    const characterData: CharacterData = {
+      name: this.characterForm.get('name')?.value,
+      color: this.characterForm.get('color')?.value,
+    };
+    const type: GameCharacter = this.characterForm.get('characterType')?.value as GameCharacter;
+    this.createdCharacter = createCharacter(type, characterData);
+  }
+
+  initForm(): void {
+    this.form = this.fb.group({
+      id: ['', Validators.required],
+      name: ['', Validators.required],
+      email: ['', Validators.required],
+      age: ['', Validators.required],
+    });
+  }
+
+  initCharacterForm(): void {
+    this.characterForm = this.fb.group({
+      characterType: ['', Validators.required],
+      name: ['', Validators.required],
+      color: ['', Validators.required],
+    });
   }
 
   mergeObservables(): void {
@@ -186,7 +215,7 @@ export class AppComponent implements OnInit, AfterViewInit {
       map(() => this.fetchInput.nativeElement.value),
       concatMap(value =>
         this.http.get(`https://random-data-api.com/api/${value}/random_${value}`).pipe(
-          catchError( error => of(`Could not fetch data due to: ${error}`))
+          catchError(error => of(`Could not fetch data due to: ${error}`)),
         ),
       ),
     ).subscribe({

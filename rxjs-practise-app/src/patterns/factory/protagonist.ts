@@ -1,6 +1,6 @@
 import { Character } from './character';
 
-export class Antagonist extends Character {
+export class Protagonist extends Character {
 
   createSprite() {
     console.log('Creates sprite of playable character.')
